@@ -1,1 +1,391 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Player 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    /* Giữ nguyên background.jpg của mày kèm lớp phủ tối cho sang */
+    background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('background.jpg');
+    background-size:cover;
+    background-position:center;
+    font-family:'Inter',sans-serif;
+    color:white;
+    padding:20px;
+}
+
+/* PLAYER */
+.player{
+    width:100%;
+    max-width:380px;
+    background:#141724;
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* COVER */
+.cover{
+    width:100%;
+    height:300px;
+    overflow:hidden;
+    position:relative;
+}
+
+.cover img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+/* DARK OVERLAY */
+.cover::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(to top, #141724, rgba(20,23,36,0));
+}
+
+/* INFO */
+.info{
+    padding:24px;
+}
+
+.song-title{
+    font-size:22px;
+    font-weight:600;
+    margin-bottom:6px;
+    line-height:1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.song-artist{
+    color:#a0a0a0;
+    font-size:14px;
+}
+
+/* PROGRESS */
+.progress-area{
+    margin-top:28px;
+}
+
+.progress-bar{
+    width:100%;
+    height:5px;
+    background:#262936;
+    border-radius:999px;
+    cursor:pointer;
+}
+
+.progress{
+    width:0%;
+    height:100%;
+    background:#1db954;
+    border-radius:999px;
+    transition: width 0.1s linear;
+}
+
+.time{
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+    font-size:13px;
+    color:#a0a0a0;
+}
+
+/* CONTROLS */
+.controls{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:28px;
+    margin-top:25px;
+}
+
+.controls button{
+    border:none;
+    background:none;
+    color:white;
+    cursor:pointer;
+    font-size: 18px;
+    transition:0.2s;
+}
+
+.controls button:hover{
+    transform:scale(1.12);
+    color:#1db954;
+}
+
+.controls .main-btn{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:#1db954;
+    color:black;
+    font-size:20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.controls .main-btn:hover{
+    color:black;
+    transform:scale(1.06);
+}
+
+/* PLAYLIST BUTTON */
+.playlist-btn{
+    width:100%;
+    margin-top:28px;
+    height:46px;
+    border:none;
+    border-radius:14px;
+    background:#1e2235;
+    color:white;
+    font-size:14px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.playlist-btn:hover{
+    background:#282d46;
+}
+
+/* PLAYLIST */
+ul{
+    list-style:none;
+    margin-top:18px;
+    max-height:200px;
+    overflow-y:auto;
+    display:none;
+}
+
+ul::-webkit-scrollbar{
+    width:4px;
+}
+
+ul::-webkit-scrollbar-thumb{
+    background:#383d57;
+    border-radius:999px;
+}
+
+li{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px;
+    border-radius:14px;
+    background:#1c1f30;
+    margin-bottom:10px;
+    cursor:pointer;
+    font-size: 14px;
+    transition:0.2s;
+}
+
+li:hover{
+    background:#252a42;
+}
+
+.playing{
+    background:rgba(29, 185, 84, 0.15) !important;
+    color:#1db954;
+    border: 1px solid rgba(29, 185, 84, 0.3);
+}
+
+.playing i{
+    color:#1db954;
+}
+
+.track-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.track-left i{
+    color:#b3b3b3;
+}
+
+@media(max-width:480px){
+    body{ padding:14px; }
+    .player{ border-radius:20px; }
+    .cover{ height:250px; }
+    .info{ padding:20px; }
+    .song-title{ font-size:20px; }
+    .controls{ gap:22px; }
+    .controls .main-btn{ width:54px; height:54px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="player">
+    <div class="cover">
+        <!-- Giữ nguyên ảnh background.jpg làm ảnh cover mặc định -->
+        <img src="background.jpg" alt="Cover">
+    </div>
+
+    <div class="info">
+        <div class="song-title" id="songTitle">Chọn bài hát</div>
+        <div class="song-artist">Night playlist</div>
+
+        <!-- PROGRESS -->
+        <div class="progress-area">
+            <div class="progress-bar" id="progressBar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <div class="time">
+                <span id="current">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="controls">
+            <button onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
+            <button class="main-btn" onclick="togglePlay()"><i class="fa-solid fa-play" id="playIcon"></i></button>
+            <button onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
+        </div>
+
+        <!-- PLAYLIST -->
+        <button class="playlist-btn" id="togglePlaylist">
+            <i class="fa-solid fa-music" style="margin-right: 6px;"></i> Danh sách phát
+        </button>
+        <ul id="playlist"></ul>
+    </div>
+</div>
+
+<audio id="audioPlayer"></audio>
+
+<script>
+const playlist = document.getElementById('playlist');
+const audioPlayer = document.getElementById('audioPlayer');
+const toggleButton = document.getElementById('togglePlaylist');
+const songTitle = document.getElementById('songTitle');
+const playIcon = document.getElementById('playIcon');
+const progress = document.getElementById('progress');
+const progressBar = document.getElementById('progressBar');
+const current = document.getElementById('current');
+const duration = document.getElementById('duration');
+
+const tracks = [
+    { name: "Âm Thầm Bên Em", url: "music/amthambenem.mp3" },
+    { name: "Bình Yên", url: "music/binhyen.mp3" },
+    { name: "Mất Kết Nối", url: "music/matketnoi.mp3" },
+    { name: "Thay Tôi Yêu Cô Ấy", url: "music/thaytoiyeucoay.mp3" },
+    { name: "Trả Cho Em", url: "music/trachoem.mp3" }
+];
+
+let currentTrack = -1;
+
+// Khởi tạo danh sách bài hát
+tracks.forEach((track, index) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+        <div class="track-left">
+            <i class="fa-solid fa-music" style="font-size: 12px; opacity: 0.7;"></i>
+            <span>${track.name}</span>
+        </div>
+        <i class="fa-solid fa-play" style="font-size: 12px; opacity: 0.5;"></i>
+    `;
+    li.addEventListener('click', () => {
+        playTrack(index);
+    });
+    playlist.appendChild(li);
+});
+
+toggleButton.addEventListener('click', () => {
+    playlist.style.display = playlist.style.display === 'block' ? 'none' : 'block';
+});
+
+function playTrack(index) {
+    currentTrack = index;
+    audioPlayer.src = tracks[index].url;
+    songTitle.textContent = tracks[index].name;
+    
+    audioPlayer.play().catch(err => console.log("Lỗi tải file nhạc ngầm local"));
+    playIcon.className = "fa-solid fa-pause";
+
+    document.querySelectorAll('#playlist li').forEach(li => li.classList.remove('playing'));
+    playlist.children[index].classList.add('playing');
+}
+
+function togglePlay() {
+    if (currentTrack === -1) {
+        playTrack(0); // Nếu chưa chọn bài nào, bấm Play sẽ tự chạy bài đầu tiên
+        return;
+    }
+    if (audioPlayer.paused) {
+        audioPlayer.play();
+        playIcon.className = "fa-solid fa-pause";
+    } else {
+        audioPlayer.pause();
+        playIcon.className = "fa-solid fa-play";
+    }
+}
+
+function nextTrack() {
+    let next = currentTrack + 1;
+    if (next >= tracks.length) next = 0;
+    playTrack(next);
+}
+
+function prevTrack() {
+    let prev = currentTrack - 1;
+    if (prev < 0) prev = tracks.length - 1;
+    playTrack(prev);
+}
+
+// Lắng nghe sự kiện của Audio Player để đồng bộ Icon
+audioPlayer.addEventListener('ended', () => { nextTrack(); });
+audioPlayer.addEventListener('pause', () => { playIcon.className = "fa-solid fa-play"; });
+audioPlayer.addEventListener('play', () => { playIcon.className = "fa-solid fa-pause"; });
+
+// Cập nhật thanh Progress Bar mượt mà hơn
+audioPlayer.addEventListener('timeupdate', () => {
+    if (isNaN(audioPlayer.duration)) return;
+    const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+    progress.style.width = percent + "%";
+    current.textContent = formatTime(audioPlayer.currentTime);
+});
+
+audioPlayer.addEventListener('loadedmetadata', () => {
+    duration.textContent = formatTime(audioPlayer.duration);
+});
+
+// Fix lỗi click tua nhạc khi chưa load được bài hát
+progressBar.addEventListener('click', (e) => {
+    if (isNaN(audioPlayer.duration)) return;
+    const width = progressBar.clientWidth;
+    const clickX = e.offsetX;
+    const dur = audioPlayer.duration;
+    audioPlayer.currentTime = (clickX / width) * dur;
+});
+
+function formatTime(time) {
+    const min = Math.floor(time / 60);
+    const sec = Math.floor(time % 60);
+    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+}
+</script>
+</body>
+</html>
